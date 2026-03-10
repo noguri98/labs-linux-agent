@@ -1,3 +1,7 @@
 # backend
 
 backend/.venv/
+
+# ollama
+
+ollama/
