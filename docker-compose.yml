@@ -6,20 +6,26 @@ services:
       context: ./backend
       dockerfile: dockerfile
     container_name: backend
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - HOST=0.0.0.0
+    env_file:
+      - .env
     ports:
       - "8000:8000"
-    restart: unless-stopped
     depends_on:
       - ollama
 
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
     ports:
       - "11434:11434"
     volumes:
-      - ${PWD}/ollama/model:/root/.ollama
-    restart: unless-stopped
+      - ${OLLAMA_DATA}:/root/.ollama
     # nvidia gpu 가속
     deploy:
       resources:
