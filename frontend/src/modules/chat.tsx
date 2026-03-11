@@ -1,30 +1,24 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useChat } from "@/hooks/useChat"
-import { Card, CardContent } from "@/components/ui/card"
-import { ChatHeader } from "./chat/components/ChatHeader"
-import { MessageList } from "./chat/components/MessageList"
-import { ChatInput } from "./chat/components/ChatInput"
+import * as React from "react";
+import { useChat } from "@/hooks/useChat";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChatHeader } from "@/components/chat/ChatHeader";
+import { MessageList } from "@/components/chat/MessageList";
+import { ChatInput } from "@/components/chat/ChatInput";
 
 /**
  * @module Chat
  * @description Main Chat component that assembles the header, message list, and input.
  */
 export function Chat() {
-  const { 
-    messages, 
-    input, 
-    setInput, 
-    sendMessage, 
-    isLoading, 
-    clearMessages 
-  } = useChat()
+  const { messages, input, setInput, sendMessage, isLoading, clearMessages } =
+    useChat();
 
   const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await sendMessage(input)
-  }
+    e.preventDefault();
+    await sendMessage(input);
+  };
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
@@ -33,13 +27,13 @@ export function Chat() {
         <CardContent className="p-0">
           <MessageList messages={messages} isLoading={isLoading} />
         </CardContent>
-        <ChatInput 
-          value={input} 
-          onChange={setInput} 
-          onSend={handleSend} 
-          isLoading={isLoading} 
+        <ChatInput
+          value={input}
+          onChange={setInput}
+          onSend={handleSend}
+          isLoading={isLoading}
         />
       </Card>
     </div>
-  )
+  );
 }
