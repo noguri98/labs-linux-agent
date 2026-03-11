@@ -68,12 +68,24 @@ services:
       - PORT=3001
     env_file:
       - .env
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: ["gpu"]
     depends_on:
       - backend
+
+  mcp-client-google-calendar:
+    build:
+      context: ./mcp/clients/google-calendar
+      dockerfile: Dockerfile
+    container_name: mcp-client-google-calendar
+    volumes:
+      - ./mcp/clients/google-calendar/token.json:/app/token.json
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+    env_file:
+      - .env
+    depends_on:
+      - mcp-server
