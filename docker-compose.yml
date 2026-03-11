@@ -53,3 +53,27 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_ADMIN_BACKEND_HOST: ${NEXT_PUBLIC_ADMIN_BACKEND_HOST:-http://localhost:8000}
+
+  mcp-server:
+    build:
+      context: ./mcp/server
+      dockerfile: Dockerfile
+    container_name: mcp-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "3001:3001"
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - PORT=3001
+    env_file:
+      - .env
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: ["gpu"]
+    depends_on:
+      - backend
