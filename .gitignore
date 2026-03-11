@@ -4,6 +4,7 @@
 
 # backend
 
+__pycache__/
 backend/.venv/
 
 # ollama
@@ -13,3 +14,7 @@ ollama/
 # frontend
 
 frontend/node_modules/
+
+# mcp
+
+token.json
