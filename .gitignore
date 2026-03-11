@@ -1,3 +1,11 @@
+# system
+
+.env
+
 # backend
 
 backend/.venv/
+
+# ollama
+
+ollama/
