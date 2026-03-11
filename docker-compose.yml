@@ -9,6 +9,7 @@ services:
     environment:
       - OLLAMA_HOST=http://ollama:11434
       - HOST=0.0.0.0
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
     env_file:
       - .env
     ports:
@@ -34,3 +35,21 @@ services:
             - driver: nvidia
               count: 1
               capabilities: ["gpu"]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: dockerfile
+      args:
+        - NEXT_PUBLIC_ADMIN_BACKEND_HOST=${NEXT_PUBLIC_ADMIN_BACKEND_HOST:-http://localhost:8000}
+    container_name: frontend
+    env_file:
+      - .env
+    command: "npm run dev"
+    restart: always
+    volumes:
+      - ./frontend/src:/app/src
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_ADMIN_BACKEND_HOST: ${NEXT_PUBLIC_ADMIN_BACKEND_HOST:-http://localhost:8000}
