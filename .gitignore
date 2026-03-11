@@ -9,3 +9,7 @@ backend/.venv/
 # ollama
 
 ollama/
+
+# frontend
+
+frontend/node_modules/
