@@ -7,14 +7,13 @@ from mcp import ClientSession
 from mcp.client.sse import sse_client
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-MCP_SERVER_URL = "http://mcp-server:3001/sse"
-MCP_CALENDAR_URL = "http://mcp-client-google-calendar:3002/sse"
+MCP_CALENDAR_URL = "http://mcp-google-calendar:3002/sse"
 
 
 async def get_mcp_tools():
     """Discover tools from all MCP servers."""
     all_tools = []
-    servers = [MCP_SERVER_URL, MCP_CALENDAR_URL]
+    servers = [MCP_CALENDAR_URL]
 
     for url in servers:
         try:
@@ -102,7 +101,9 @@ async def generate_response(model: str, prompt: str, stream: bool = False) -> st
                             target_tool["server_url"], func_name, args
                         )
 
-                        messages.append({"role": "tool", "content": tool_result})
+                        messages.append(
+                            {"role": "tool", "content": tool_result, "name": func_name}
+                        )
 
                 # 도구 결과와 함께 다시 호출
                 final_response = await client.post(

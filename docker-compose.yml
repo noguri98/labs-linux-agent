@@ -54,30 +54,13 @@ services:
     environment:
       NEXT_PUBLIC_ADMIN_BACKEND_HOST: ${NEXT_PUBLIC_ADMIN_BACKEND_HOST:-http://localhost:8000}
 
-  mcp-server:
+  mcp-google-calendar:
     build:
-      context: ./mcp/server
+      context: ./mcp/servers/google-calendar
       dockerfile: Dockerfile
-    container_name: mcp-server
+    container_name: mcp-google-calendar
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - "3001:3001"
-    environment:
-      - DOCKER_HOST=unix:///var/run/docker.sock
-      - PORT=3001
-    env_file:
-      - .env
-    depends_on:
-      - backend
-
-  mcp-client-google-calendar:
-    build:
-      context: ./mcp/clients/google-calendar
-      dockerfile: Dockerfile
-    container_name: mcp-client-google-calendar
-    volumes:
-      - ./mcp/clients/google-calendar/token.json:/app/token.json
+      - ./mcp/servers/google-calendar/token.json:/app/token.json
     ports:
       - "3002:3002"
     environment:
@@ -88,4 +71,4 @@ services:
     env_file:
       - .env
     depends_on:
-      - mcp-server
+      - backend
