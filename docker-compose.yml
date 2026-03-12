@@ -71,3 +71,20 @@ services:
       - .env
     depends_on:
       - backend
+
+  mcp-filesystem:
+    build:
+      context: ./mcp/servers/mcp-filesystem
+      dockerfile: Dockerfile
+    container_name: mcp-filesystem
+    volumes:
+      - ${FILE_PATH}:/data
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - FILE_PATH=/data
+    env_file:
+      - .env
+    depends_on:
+      - backend

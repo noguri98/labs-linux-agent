@@ -14,7 +14,10 @@ async def get_mcp_status():
         tools = await get_mcp_tools()
         return {
             "status": "connected" if tools else "connected_no_tools",
-            "server_url": "http://mcp-server:3001/sse",
+            "server_urls": [
+                "http://mcp-google-services:3002/sse",
+                "http://mcp-filesystem:3003/sse",
+            ],
             "tools": tools,
             "tool_count": len(tools),
         }
@@ -22,5 +25,8 @@ async def get_mcp_status():
         return {
             "status": "error",
             "error": str(e),
-            "server_url": "http://mcp-server:3001/sse",
+            "server_urls": [
+                "http://mcp-google-services:3002/sse",
+                "http://mcp-filesystem:3003/sse",
+            ],
         }
