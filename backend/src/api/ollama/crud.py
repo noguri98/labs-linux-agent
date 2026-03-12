@@ -8,13 +8,14 @@ from mcp import ClientSession
 from mcp.client.sse import sse_client
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-MCP_CALENDAR_URL = "http://mcp-google-calendar:3002/sse"
+# 통합된 단일 구글 서비스 URL
+MCP_GOOGLE_URL = "http://mcp-google-services:3002/sse"
 
 
 async def get_mcp_tools():
-    """Discover tools from all MCP servers."""
+    """Discover tools from unified MCP server."""
     all_tools = []
-    servers = [MCP_CALENDAR_URL]
+    servers = [MCP_GOOGLE_URL]
 
     for url in servers:
         try:
@@ -72,10 +73,10 @@ async def generate_response(model: str, prompt: str, stream: bool = False) -> st
 
     system_msg = (
         f"Current date and time is {current_time} (Asia/Seoul, KST, UTC+9). "
-        "User is in South Korea. All schedules should be handled in KST. "
-        "When calling Google Calendar tools, ALWAYS use ISO 8601 strings with +09:00 offset "
-        "for start and end times. To update or delete an event, you MUST first use 'list_events' "
-        "to find the correct 'eventId'. Always provide clear feedback to the user about what you have done."
+        "User is in South Korea. All schedules and tasks should be handled in KST. "
+        "You have access to Google Calendar and Google Tasks through unified tools. "
+        "When calling tools, ALWAYS use ISO 8601 strings with +09:00 offset. "
+        "Always provide clear feedback to the user about what you have done."
     )
 
     messages = [
@@ -84,10 +85,8 @@ async def generate_response(model: str, prompt: str, stream: bool = False) -> st
     ]
 
     async with httpx.AsyncClient(timeout=120.0) as client:
-        # 최대 5번의 도구 호출/추론 루프 허용
         for attempt in range(5):
             try:
-                print(f"--- [Attempt {attempt + 1}] Sending request to Ollama ---")
                 payload = {
                     "model": model,
                     "messages": messages,
@@ -100,16 +99,11 @@ async def generate_response(model: str, prompt: str, stream: bool = False) -> st
                 data = response.json()
 
                 message = data.get("message", {})
-                messages.append(
-                    message
-                )  # AI의 메시지(도구 호출 포함)를 대화 기록에 추가
+                messages.append(message)
 
                 tool_calls = message.get("tool_calls", [])
                 if not tool_calls:
-                    # 도구 호출이 없으면 최종 답변으로 간주하고 반환
                     return message.get("content", "")
-
-                print(f"AI requested tool calls: {tool_calls}")
 
                 for tool_call in tool_calls:
                     func_name = tool_call["function"]["name"]
@@ -120,12 +114,9 @@ async def generate_response(model: str, prompt: str, stream: bool = False) -> st
                     )
 
                     if target_tool:
-                        print(f"Executing tool {func_name} with args {args}")
                         tool_result = await call_mcp_tool(
                             target_tool["server_url"], func_name, args
                         )
-                        print(f"Tool result: {tool_result}")
-                        # 도구 실행 결과를 대화 기록에 추가하여 다음 추론에 반영
                         messages.append(
                             {"role": "tool", "content": tool_result, "name": func_name}
                         )
@@ -139,12 +130,10 @@ async def generate_response(model: str, prompt: str, stream: bool = False) -> st
                         )
 
             except httpx.HTTPStatusError as e:
-                print(f"Ollama HTTP Error: {e.response.text}")
                 raise HTTPException(
                     status_code=e.response.status_code, detail=e.response.text
                 )
             except Exception as e:
-                print(f"Unexpected error in generate_response: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
-        return "I tried to process your request but it took too many steps. Please be more specific."
+        return "I tried to process your request but it took too many steps."
