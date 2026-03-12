@@ -15,6 +15,7 @@ async def get_mcp_status():
         return {
             "status": "connected" if tools else "connected_no_tools",
             "server_urls": [
+                "http://mcp-web:3001/sse",
                 "http://mcp-google-services:3002/sse",
                 "http://mcp-filesystem:3003/sse",
             ],
@@ -26,6 +27,7 @@ async def get_mcp_status():
             "status": "error",
             "error": str(e),
             "server_urls": [
+                "http://mcp-web:3001/sse",
                 "http://mcp-google-services:3002/sse",
                 "http://mcp-filesystem:3003/sse",
             ],
