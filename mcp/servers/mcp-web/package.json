@@ -1,0 +1,13 @@
+{
+  "name": "mcp-web",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "express": "^4.19.2",
+    "axios": "^1.7.2"
+  },
+  "scripts": {
+    "start": "node src/client.js"
+  }
+}
