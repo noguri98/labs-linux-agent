@@ -53,3 +53,22 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_ADMIN_BACKEND_HOST: ${NEXT_PUBLIC_ADMIN_BACKEND_HOST:-http://localhost:8000}
+
+  mcp-google-calendar:
+    build:
+      context: ./mcp/servers/google-calendar
+      dockerfile: Dockerfile
+    container_name: mcp-google-calendar
+    volumes:
+      - ./mcp/servers/google-calendar/token.json:/app/token.json
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+    env_file:
+      - .env
+    depends_on:
+      - backend

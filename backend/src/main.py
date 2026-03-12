@@ -1,10 +1,13 @@
 import os
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.mcp.view import router as mcp_router
 from api.ollama.view import router as ollama_router
 from api.root.view import router as root_router
+
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Labs AI Agent Backend")
@@ -25,8 +28,10 @@ def create_app() -> FastAPI:
     # Routes
     app.include_router(root_router)
     app.include_router(ollama_router)
-    
+    app.include_router(mcp_router)
+
     return app
+
 
 app = create_app()
 
