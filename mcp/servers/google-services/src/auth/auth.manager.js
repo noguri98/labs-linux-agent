@@ -6,6 +6,7 @@ const TOKEN_PATH = path.join(process.cwd(), "token.json");
 const SCOPES = [
   "https://www.googleapis.com/auth/calendar.readonly",
   "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/tasks", // Added for Google Tasks
 ];
 
 export class AuthManager {
@@ -23,10 +24,8 @@ export class AuthManager {
       const credentials = JSON.parse(content);
       this.oauth2Client.setCredentials(credentials);
 
-      // Add a listener to save tokens when they are refreshed
       this.oauth2Client.on("tokens", (tokens) => {
         if (tokens.refresh_token) {
-          // Keep the old refresh token if the new ones don't include it
           credentials.refresh_token = tokens.refresh_token;
         }
         Object.assign(credentials, tokens);

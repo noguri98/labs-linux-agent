@@ -27,7 +27,6 @@ services:
       - "11434:11434"
     volumes:
       - ${OLLAMA_DATA}:/root/.ollama
-    # nvidia gpu 가속
     deploy:
       resources:
         reservations:
@@ -54,13 +53,13 @@ services:
     environment:
       NEXT_PUBLIC_ADMIN_BACKEND_HOST: ${NEXT_PUBLIC_ADMIN_BACKEND_HOST:-http://localhost:8000}
 
-  mcp-google-calendar:
+  mcp-google-services:
     build:
-      context: ./mcp/servers/google-calendar
+      context: ./mcp/servers/google-services
       dockerfile: Dockerfile
-    container_name: mcp-google-calendar
+    container_name: mcp-google-services
     volumes:
-      - ./mcp/servers/google-calendar/token.json:/app/token.json
+      - ./mcp/servers/config/token.json:/app/token.json
     ports:
       - "3002:3002"
     environment:
