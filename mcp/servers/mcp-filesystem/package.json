@@ -1,0 +1,13 @@
+{
+  "name": "mcp-filesystem",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "express": "^4.19.2",
+    "glob": "^10.4.5"
+  },
+  "scripts": {
+    "start": "node src/client.js"
+  }
+}

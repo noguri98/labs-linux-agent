@@ -10,12 +10,13 @@ from mcp.client.sse import sse_client
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 # 통합된 단일 구글 서비스 URL
 MCP_GOOGLE_URL = "http://mcp-google-services:3002/sse"
+MCP_FILESYSTEM_URL = "http://mcp-filesystem:3003/sse"
 
 
 async def get_mcp_tools():
     """Discover tools from unified MCP server."""
     all_tools = []
-    servers = [MCP_GOOGLE_URL]
+    servers = [MCP_GOOGLE_URL, MCP_FILESYSTEM_URL]
 
     for url in servers:
         try:
@@ -74,8 +75,9 @@ async def generate_response(model: str, prompt: str, stream: bool = False) -> st
     system_msg = (
         f"Current date and time is {current_time} (Asia/Seoul, KST, UTC+9). "
         "User is in South Korea. All schedules and tasks should be handled in KST. "
-        "You have access to Google Calendar and Google Tasks through unified tools. "
-        "When calling tools, ALWAYS use ISO 8601 strings with +09:00 offset. "
+        "You have access to Google Calendar, Google Tasks, and Local Filesystem through unified tools. "
+        "When calling calendar or tasks tools, ALWAYS use ISO 8601 strings with +09:00 offset. "
+        "For filesystem tools, use relative paths from the base directory. "
         "Always provide clear feedback to the user about what you have done."
     )
 
