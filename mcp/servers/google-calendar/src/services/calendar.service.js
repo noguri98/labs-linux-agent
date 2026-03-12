@@ -17,6 +17,7 @@ export class CalendarService {
         maxResults,
         singleEvents: true,
         orderBy: "startTime",
+        timeZone: "Asia/Seoul",
       });
       const events = res.data.items;
 
@@ -29,7 +30,7 @@ export class CalendarService {
       const eventList = events
         .map(
           (event) =>
-            `${event.summary} (${event.start.dateTime || event.start.date})`
+            `ID: ${event.id} | Summary: ${event.summary} (${event.start.dateTime || event.start.date})`,
         )
         .join("\n");
 
@@ -55,19 +56,84 @@ export class CalendarService {
           summary,
           location,
           description,
-          start: { dateTime: start },
-          end: { dateTime: end },
+          start: {
+            dateTime: start,
+            timeZone: "Asia/Seoul",
+          },
+          end: {
+            dateTime: end,
+            timeZone: "Asia/Seoul",
+          },
         },
       });
       return {
         content: [
-          { type: "text", text: `Event '${summary}' created successfully.` },
+          {
+            type: "text",
+            text: `Event '${summary}' created successfully in KST.`,
+          },
         ],
       };
     } catch (error) {
       return {
         content: [
           { type: "text", text: `Error creating event: ${error.message}` },
+        ],
+        isError: true,
+      };
+    }
+  }
+
+  async updateEvent(args = {}) {
+    try {
+      const { eventId, summary, location, description, start, end } = args;
+      const requestBody = {};
+      if (summary) requestBody.summary = summary;
+      if (location) requestBody.location = location;
+      if (description) requestBody.description = description;
+      if (start)
+        requestBody.start = { dateTime: start, timeZone: "Asia/Seoul" };
+      if (end) requestBody.end = { dateTime: end, timeZone: "Asia/Seoul" };
+
+      await this.calendar.events.patch({
+        calendarId: "primary",
+        eventId,
+        requestBody,
+      });
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Event ID '${eventId}' updated successfully in KST.`,
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          { type: "text", text: `Error updating event: ${error.message}` },
+        ],
+        isError: true,
+      };
+    }
+  }
+
+  async deleteEvent(args = {}) {
+    try {
+      const { eventId } = args;
+      await this.calendar.events.delete({
+        calendarId: "primary",
+        eventId,
+      });
+      return {
+        content: [
+          { type: "text", text: `Event ID '${eventId}' deleted successfully.` },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          { type: "text", text: `Error deleting event: ${error.message}` },
         ],
         isError: true,
       };

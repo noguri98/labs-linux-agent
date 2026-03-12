@@ -47,6 +47,7 @@ export class AuthManager {
     return this.oauth2Client.generateAuthUrl({
       access_type: "offline",
       scope: SCOPES,
+      prompt: "consent",
     });
   }
 

@@ -13,6 +13,10 @@ class Application {
   }
 
   setupRoutes() {
+    this.app.use((req, res, next) => {
+      console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+      next();
+    });
     this.app.get("/auth", (req, res) => {
       res.redirect(this.authManager.getAuthUrl());
     });

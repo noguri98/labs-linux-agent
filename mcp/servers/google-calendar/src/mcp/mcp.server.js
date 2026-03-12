@@ -51,6 +51,39 @@ export class MCPServer {
             required: ["summary", "start", "end"],
           },
         },
+        {
+          name: "update_event",
+          description: "Update an existing event in Google Calendar",
+          inputSchema: {
+            type: "object",
+            properties: {
+              eventId: {
+                type: "string",
+                description: "The ID of the event to update",
+              },
+              summary: { type: "string" },
+              location: { type: "string" },
+              description: { type: "string" },
+              start: { type: "string", description: "ISO 8601 date string" },
+              end: { type: "string", description: "ISO 8601 date string" },
+            },
+            required: ["eventId"],
+          },
+        },
+        {
+          name: "delete_event",
+          description: "Delete an event from Google Calendar",
+          inputSchema: {
+            type: "object",
+            properties: {
+              eventId: {
+                type: "string",
+                description: "The ID of the event to delete",
+              },
+            },
+            required: ["eventId"],
+          },
+        },
       ],
     }));
 
@@ -77,6 +110,10 @@ export class MCPServer {
           return await calendarService.listEvents(request.params.arguments);
         case "create_event":
           return await calendarService.createEvent(request.params.arguments);
+        case "update_event":
+          return await calendarService.updateEvent(request.params.arguments);
+        case "delete_event":
+          return await calendarService.deleteEvent(request.params.arguments);
         default:
           throw new Error(`Unknown tool: ${request.params.name}`);
       }

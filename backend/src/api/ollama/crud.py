@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 
 import httpx
 from fastapi import HTTPException
@@ -39,24 +40,28 @@ async def get_mcp_tools():
 
 async def call_mcp_tool(server_url, tool_name, arguments):
     """Execute a tool call via MCP."""
-    async with sse_client(server_url) as streams:
-        async with ClientSession(streams[0], streams[1]) as session:
-            await session.initialize()
-            result = await session.call_tool(tool_name, arguments)
-            # Format the content into a simple string for the LLM
-            text_content = ""
-            for item in result.content:
-                if hasattr(item, "text"):
-                    text_content += item.text
-                elif isinstance(item, dict) and "text" in item:
-                    text_content += item["text"]
-            return text_content
+    try:
+        async with sse_client(server_url) as streams:
+            async with ClientSession(streams[0], streams[1]) as session:
+                await session.initialize()
+                result = await session.call_tool(tool_name, arguments)
+                text_content = ""
+                for item in result.content:
+                    if hasattr(item, "text"):
+                        text_content += item.text
+                    elif isinstance(item, dict) and "text" in item:
+                        text_content += item["text"]
+                return text_content
+    except Exception as e:
+        return f"Error calling tool {tool_name}: {str(e)}"
 
 
 async def generate_response(model: str, prompt: str, stream: bool = False) -> str:
     """
-    Main entry point for generating response with potential tool calls.
+    Main entry point for generating response with iterative tool calls.
     """
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S %A")
+
     try:
         tools = await get_mcp_tools()
     except Exception as e:
@@ -65,28 +70,46 @@ async def generate_response(model: str, prompt: str, stream: bool = False) -> st
 
     ollama_tools = [{"type": t["type"], "function": t["function"]} for t in tools]
 
-    messages = [{"role": "user", "content": prompt}]
+    system_msg = (
+        f"Current date and time is {current_time} (Asia/Seoul, KST, UTC+9). "
+        "User is in South Korea. All schedules should be handled in KST. "
+        "When calling Google Calendar tools, ALWAYS use ISO 8601 strings with +09:00 offset "
+        "for start and end times. To update or delete an event, you MUST first use 'list_events' "
+        "to find the correct 'eventId'. Always provide clear feedback to the user about what you have done."
+    )
 
-    url = f"{OLLAMA_HOST}/api/chat"
-    payload = {
-        "model": model,
-        "messages": messages,
-        "stream": False,
-        "tools": ollama_tools if ollama_tools else None,
-    }
+    messages = [
+        {"role": "system", "content": system_msg},
+        {"role": "user", "content": prompt},
+    ]
 
     async with httpx.AsyncClient(timeout=120.0) as client:
-        try:
-            response = await client.post(url, json=payload)
-            response.raise_for_status()
-            data = response.json()
+        # 최대 5번의 도구 호출/추론 루프 허용
+        for attempt in range(5):
+            try:
+                print(f"--- [Attempt {attempt + 1}] Sending request to Ollama ---")
+                payload = {
+                    "model": model,
+                    "messages": messages,
+                    "stream": False,
+                    "tools": ollama_tools if ollama_tools else None,
+                }
 
-            message = data.get("message", {})
-            tool_calls = message.get("tool_calls", [])
+                response = await client.post(f"{OLLAMA_HOST}/api/chat", json=payload)
+                response.raise_for_status()
+                data = response.json()
 
-            if tool_calls:
+                message = data.get("message", {})
+                messages.append(
+                    message
+                )  # AI의 메시지(도구 호출 포함)를 대화 기록에 추가
+
+                tool_calls = message.get("tool_calls", [])
+                if not tool_calls:
+                    # 도구 호출이 없으면 최종 답변으로 간주하고 반환
+                    return message.get("content", "")
+
                 print(f"AI requested tool calls: {tool_calls}")
-                messages.append(message)  # AI의 도구 호출 메시지 추가
 
                 for tool_call in tool_calls:
                     func_name = tool_call["function"]["name"]
@@ -95,30 +118,33 @@ async def generate_response(model: str, prompt: str, stream: bool = False) -> st
                     target_tool = next(
                         (t for t in tools if t["function"]["name"] == func_name), None
                     )
+
                     if target_tool:
                         print(f"Executing tool {func_name} with args {args}")
                         tool_result = await call_mcp_tool(
                             target_tool["server_url"], func_name, args
                         )
-
+                        print(f"Tool result: {tool_result}")
+                        # 도구 실행 결과를 대화 기록에 추가하여 다음 추론에 반영
                         messages.append(
                             {"role": "tool", "content": tool_result, "name": func_name}
                         )
+                    else:
+                        messages.append(
+                            {
+                                "role": "tool",
+                                "content": f"Error: Tool {func_name} not found",
+                                "name": func_name,
+                            }
+                        )
 
-                # 도구 결과와 함께 다시 호출
-                final_response = await client.post(
-                    url, json={"model": model, "messages": messages, "stream": False}
+            except httpx.HTTPStatusError as e:
+                print(f"Ollama HTTP Error: {e.response.text}")
+                raise HTTPException(
+                    status_code=e.response.status_code, detail=e.response.text
                 )
-                final_data = final_response.json()
-                return final_data.get("message", {}).get("content", "")
+            except Exception as e:
+                print(f"Unexpected error in generate_response: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
 
-            return message.get("content", "")
-
-        except httpx.HTTPStatusError as e:
-            print(f"Ollama HTTP Error: {e.response.text}")
-            raise HTTPException(
-                status_code=e.response.status_code, detail=e.response.text
-            )
-        except Exception as e:
-            print(f"Unexpected error in generate_response: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+        return "I tried to process your request but it took too many steps. Please be more specific."
