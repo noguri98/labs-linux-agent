@@ -1,5 +1,8 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { ListToolsRequestSchema, CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import {
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
 import { CalendarService } from "../services/calendar.service.js";
 import { TasksService } from "../services/tasks.service.js";
 
@@ -8,7 +11,7 @@ export class MCPServer {
     this.authManager = authManager;
     this.server = new Server(
       { name: "google-services-mcp", version: "1.0.0" },
-      { capabilities: { tools: {} } }
+      { capabilities: { tools: {} } },
     );
     this.setupHandlers();
   }
@@ -99,13 +102,30 @@ export class MCPServer {
             required: ["taskId"],
           },
         },
+        {
+          name: "delete_task",
+          description: "Delete a task from Google Tasks",
+          inputSchema: {
+            type: "object",
+            properties: {
+              taskId: { type: "string" },
+              tasklist: { type: "string", default: "@default" },
+            },
+            required: ["taskId"],
+          },
+        },
       ],
     }));
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const hasAuth = await this.authManager.loadSavedCredentialsIfExist();
       if (!hasAuth) {
-        return { content: [{ type: "text", text: "Error: Google Authentication required." }], isError: true };
+        return {
+          content: [
+            { type: "text", text: "Error: Google Authentication required." },
+          ],
+          isError: true,
+        };
       }
 
       const authClient = this.authManager.getAuthClient();
@@ -114,18 +134,30 @@ export class MCPServer {
 
       switch (request.params.name) {
         // Calendar
-        case "list_events": return await calendarService.listEvents(request.params.arguments);
-        case "create_event": return await calendarService.createEvent(request.params.arguments);
-        case "update_event": return await calendarService.updateEvent(request.params.arguments);
+        case "list_events":
+          return await calendarService.listEvents(request.params.arguments);
+        case "create_event":
+          return await calendarService.createEvent(request.params.arguments);
+        case "update_event":
+          return await calendarService.updateEvent(request.params.arguments);
         // Tasks
-        case "list_task_lists": return await tasksService.listTaskLists();
-        case "list_tasks": return await tasksService.listTasks(request.params.arguments);
-        case "create_task": return await tasksService.createTask(request.params.arguments);
-        case "update_task": return await tasksService.updateTask(request.params.arguments);
-        default: throw new Error(`Unknown tool: ${request.params.name}`);
+        case "list_task_lists":
+          return await tasksService.listTaskLists();
+        case "list_tasks":
+          return await tasksService.listTasks(request.params.arguments);
+        case "create_task":
+          return await tasksService.createTask(request.params.arguments);
+        case "update_task":
+          return await tasksService.updateTask(request.params.arguments);
+        case "delete_task":
+          return await tasksService.deleteTask(request.params.arguments);
+        default:
+          throw new Error(`Unknown tool: ${request.params.name}`);
       }
     });
   }
 
-  getServer() { return this.server; }
+  getServer() {
+    return this.server;
+  }
 }

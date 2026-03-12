@@ -11,9 +11,17 @@ export class TasksService {
   async listTaskLists() {
     const res = await this.tasks.tasklists.list();
     const taskLists = res.data.items || [];
-    if (taskLists.length === 0) return { content: [{ type: "text", text: "No task lists found." }] };
+    if (taskLists.length === 0)
+      return { content: [{ type: "text", text: "No task lists found." }] };
     return {
-      content: [{ type: "text", text: taskLists.map(tl => `ID: ${tl.id} | Title: ${tl.title}`).join("\n") }]
+      content: [
+        {
+          type: "text",
+          text: taskLists
+            .map((tl) => `ID: ${tl.id} | Title: ${tl.title}`)
+            .join("\n"),
+        },
+      ],
     };
   }
 
@@ -25,11 +33,19 @@ export class TasksService {
         showCompleted,
       });
       const items = res.data.items || [];
-      if (items.length === 0) return { content: [{ type: "text", text: "No tasks found in this list." }] };
-      const taskListStr = items.map(t => `ID: ${t.id} | Title: ${t.title} [${t.status}]`).join("\n");
+      if (items.length === 0)
+        return {
+          content: [{ type: "text", text: "No tasks found in this list." }],
+        };
+      const taskListStr = items
+        .map((t) => `ID: ${t.id} | Title: ${t.title} [${t.status}]`)
+        .join("\n");
       return { content: [{ type: "text", text: `Tasks:\n${taskListStr}` }] };
     } catch (error) {
-      return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
+      return {
+        content: [{ type: "text", text: `Error: ${error.message}` }],
+        isError: true,
+      };
     }
   }
 
@@ -40,9 +56,16 @@ export class TasksService {
         tasklist,
         requestBody: { title, notes, due },
       });
-      return { content: [{ type: "text", text: `Task '${title}' created successfully.` }] };
+      return {
+        content: [
+          { type: "text", text: `Task '${title}' created successfully.` },
+        ],
+      };
     } catch (error) {
-      return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
+      return {
+        content: [{ type: "text", text: `Error: ${error.message}` }],
+        isError: true,
+      };
     }
   }
 
@@ -54,9 +77,36 @@ export class TasksService {
         task: taskId,
         requestBody: { title, notes, status },
       });
-      return { content: [{ type: "text", text: `Task ID '${taskId}' updated successfully.` }] };
+      return {
+        content: [
+          { type: "text", text: `Task ID '${taskId}' updated successfully.` },
+        ],
+      };
     } catch (error) {
-      return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
+      return {
+        content: [{ type: "text", text: `Error: ${error.message}` }],
+        isError: true,
+      };
+    }
+  }
+
+  async deleteTask(args = {}) {
+    try {
+      const { taskId, tasklist = "@default" } = args;
+      await this.tasks.tasks.delete({
+        tasklist,
+        task: taskId,
+      });
+      return {
+        content: [
+          { type: "text", text: `Task ID '${taskId}' deleted successfully.` },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${error.message}` }],
+        isError: true,
+      };
     }
   }
 }
