@@ -12,12 +12,13 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 MCP_GOOGLE_URL = "http://mcp-google-services:3002/sse"
 MCP_FILESYSTEM_URL = "http://mcp-filesystem:3003/sse"
 MCP_WEB_URL = "http://mcp-web:3001/sse"
+MCP_GITHUB_URL = "http://mcp-github:3004/sse"
 
 
 async def get_mcp_tools():
     """Discover tools from unified MCP server."""
     all_tools = []
-    servers = [MCP_GOOGLE_URL, MCP_FILESYSTEM_URL, MCP_WEB_URL]
+    servers = [MCP_GOOGLE_URL, MCP_FILESYSTEM_URL, MCP_WEB_URL, MCP_GITHUB_URL]
 
     for url in servers:
         try:
@@ -76,10 +77,10 @@ async def generate_response(model: str, prompt: str, stream: bool = False) -> st
     system_msg = (
         f"Current date and time is {current_time} (Asia/Seoul, KST, UTC+9). "
         "User is in South Korea. All schedules and tasks should be handled in KST. "
-        "You have access to Google Calendar, Google Tasks, Local Filesystem, and Web Search through unified tools. "
+        "You have access to Google Calendar, Google Tasks, Local Filesystem, Web Search, and GitHub through unified tools. "
         "When calling calendar or tasks tools, ALWAYS use ISO 8601 strings with +09:00 offset. "
         "For filesystem tools, use relative paths from the base directory. "
-        "Use Web Search when you need real-time information or answers to general questions. "
+        "Use Web Search for real-time information and GitHub for repository or issue management. "
         "Always provide clear feedback to the user about what you have done."
     )
 

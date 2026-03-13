@@ -18,6 +18,7 @@ async def get_mcp_status():
                 "http://mcp-web:3001/sse",
                 "http://mcp-google-services:3002/sse",
                 "http://mcp-filesystem:3003/sse",
+                "http://mcp-github:3004/sse",
             ],
             "tools": tools,
             "tool_count": len(tools),
@@ -30,5 +31,6 @@ async def get_mcp_status():
                 "http://mcp-web:3001/sse",
                 "http://mcp-google-services:3002/sse",
                 "http://mcp-filesystem:3003/sse",
+                "http://mcp-github:3004/sse",
             ],
         }

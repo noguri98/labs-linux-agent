@@ -104,3 +104,19 @@ services:
       - .env
     depends_on:
       - backend
+
+  mcp-github:
+    build:
+      context: ./mcp/servers/mcp-github
+      dockerfile: Dockerfile
+    container_name: mcp-github
+    volumes:
+      - ./mcp/servers/config/github.json:/app/config/github.json
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+    env_file:
+      - .env
+    depends_on:
+      - backend

@@ -1,0 +1,13 @@
+{
+  "name": "mcp-github",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "@octokit/rest": "^21.0.2",
+    "express": "^4.19.2"
+  },
+  "scripts": {
+    "start": "node src/client.js"
+  }
+}
